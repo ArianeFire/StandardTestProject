@@ -1,5 +1,7 @@
 package com.ocp.test;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -27,6 +29,8 @@ public class FileIOTest {
 		new File("important_directory").delete();
 		new File("writeable.txt").delete();
 		new File("readable.txt").delete();
+		new File("buffereableWriter.txt").delete();
+		new File("buffered-readable.txt").delete();
 	}
 	
 	/**
@@ -129,8 +133,8 @@ public class FileIOTest {
 	
 	@Test
 	public void testFileReaderConstructors() throws IOException{
-		createReadeableFile();
-		FileReader mReader = new FileReader("readable.txt");
+		String fileName = createReadeableFile("readable.txt");
+		FileReader mReader = new FileReader(fileName);
 		int c = 0;
 		StringBuilder mContent = new StringBuilder();
 		while((c = mReader.read()) != -1)
@@ -139,12 +143,48 @@ public class FileIOTest {
 		Assert.assertTrue(mContent.toString().contains("Hello Again Writer World"));
 	}
 	
-	private static void createReadeableFile() throws IOException{
-		FileWriter mWriter = new FileWriter("readable.txt");
+	@Test
+	public void testBufferedWriterConstructors() throws IOException{
+		// Difference with FileWriter is that it add writing newLine() method
+		//& also cannot communicate directly with the File but only through Writer
+		//(In the opposite of FileWriter which communicate directly with the file)
+		BufferedWriter mBWriter = new BufferedWriter(new FileWriter("buffereableWriter.txt"));
+		mBWriter.write("Hello BW Writer World");
+		mBWriter.newLine();
+		mBWriter.write("Hello BW Writer World Again");
+		mBWriter.close();
+		
+		boolean hasWritten = Files.readAllLines(Paths.get("buffereableWriter.txt")).contains("Hello BW Writer World Again");
+		Assert.assertTrue(hasWritten);
+	}
+	
+	@Test
+	public void testBufferedReaderConstructors() throws IOException{
+		String fileName = createReadeableFile("buffered-readable.txt");
+		// The Difference with a FileReader is that it allow reading line by line 
+		// Also as BufferedWriter, it doesn't communicate directly with the file, but through a Reader
+		//(in the opposite of a FileReader which communicate directly with the file)
+		BufferedReader mBReader = new BufferedReader(new FileReader(fileName));
+		boolean contains = mBReader.lines().anyMatch("Hello Again Writer World"::equals);
+		Assert.assertTrue(contains);
+		mBReader.close();
+		
+		mBReader = new BufferedReader(new FileReader(fileName));
+		StringBuilder mFileContent = new StringBuilder();
+		String singleLine = "";
+		while((singleLine = mBReader.readLine()) != null)
+			mFileContent.append(singleLine);
+		
+		Assert.assertTrue(mFileContent.toString().contains("Hello Again Writer World"));
+		mBReader.close();
+	}
+	
+	private static String createReadeableFile(String fileName) throws IOException{
+		FileWriter mWriter = new FileWriter(fileName);
 		mWriter.write("Hello Writer World\n");
 		mWriter.close();
 		
-		File writableFile = new File("readable.txt");
+		File writableFile = new File(fileName);
 		
 		FileWriter mAppenderWriter = new FileWriter(writableFile, true); 
 		mAppenderWriter.append("Hello Again Writer World");
@@ -153,5 +193,7 @@ public class FileIOTest {
 		mAppenderWriter.write('\n');
 		mAppenderWriter.write(new char[]{'S', 'E', 'Y', 'D', 'O', 'U'});
 		mAppenderWriter.close();
+		
+		return fileName;
 	}
 }
