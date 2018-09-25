@@ -16,6 +16,9 @@ public class FileIOTest {
 		new File("tmpFile.txt").delete();
 		new File("myDirectory").delete();
 		new File("cwd_file.text").delete();
+		new File("cwd_sub_dir", "myFileInCWD.txt").delete();
+		new File("cwd_sub_dir", "myFileCreatedUsingDirReference.txt").delete();
+		new File("cwd_sub_dir").delete();
 	}
 	
 	/**
@@ -58,5 +61,22 @@ public class FileIOTest {
 		Assert.assertFalse(file.exists());
 		file.createNewFile();
 		Assert.assertTrue(file.exists());
+		
+		// Constructor Creating file in C.W.D Subdirectory
+		File directory = new File("cwd_sub_dir");
+		Assert.assertFalse(directory.exists());
+		directory.mkdir();
+		
+		File myNewfileToBeInCWD = new File("cwd_sub_dir", "myFileInCWD.txt");
+		Assert.assertFalse(myNewfileToBeInCWD.exists());
+		myNewfileToBeInCWD.createNewFile();
+		
+		// Constructor Creating file inside another Direcory Reference
+		File myFileCreatedUsingDirReference = new File(directory, "myFileCreatedUsingDirReference.txt");
+		Assert.assertFalse(myFileCreatedUsingDirReference.exists());
+		
+		myFileCreatedUsingDirReference.createNewFile();
+		
+		Assert.assertTrue(myFileCreatedUsingDirReference.exists());
 	}
 }
