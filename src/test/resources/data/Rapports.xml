@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rapport name="REUCARE Rapport">
+	<tables>
+		<!-- Table Fait Patient -->
+		<table>
+			<name>FC_PATIENT</name>
+			<columns>
+				<column includeInReport="Y" order="1">
+					<name>ID_PATIENT</name>
+					<libelle>Identifiant du patient</libelle>
+				</column>
+				
+				<column includeInReport="Y" order="2">
+					<name>IN_IDP_FED</name>
+					<libelle>Identifiant Fonctionnel du Patient</libelle>
+				</column>
+			</columns>
+			<links>
+				<link type="LEFT_JOIN">
+					<column>IN_IDP_FED</column>
+					<foreignColumn table="AX_PATIENT">IN_IDP_FED</foreignColumn>
+				</link>
+			</links>
+		</table>
+		<!-- Table Axe Patient -->
+		<table>
+			<name>AX_PATIENT</name>
+			<columns>
+				<column includeInReport="N">
+					<name>ID_PATIENT</name>
+					<libelle>Identifiant du patient</libelle>
+				</column>
+				<column order="4">
+					<name>LL_NOM</name>
+					<libelle>Nom du patient</libelle>
+				</column>
+				<column order="3">
+					<name>LL_PRENOM</name>
+					<libelle>Prénom du patient</libelle>
+				</column>
+				<column includeInReport="N">
+					<name>IN_IDP_FED</name>
+					<libelle>ID Fonctionnel du patient</libelle>
+				</column>
+			</columns>
+		</table>
+	</tables>
+</rapport>
