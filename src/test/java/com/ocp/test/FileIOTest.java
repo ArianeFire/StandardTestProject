@@ -3,11 +3,14 @@ package com.ocp.test;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.ResultSet;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -31,6 +34,7 @@ public class FileIOTest {
 		new File("readable.txt").delete();
 		new File("buffereableWriter.txt").delete();
 		new File("buffered-readable.txt").delete();
+		new File("print-writebla.txt").delete();
 	}
 	
 	/**
@@ -177,6 +181,26 @@ public class FileIOTest {
 		
 		Assert.assertTrue(mFileContent.toString().contains("Hello Again Writer World"));
 		mBReader.close();
+	}
+	
+	@Test /** Exam Question: What is the difference between PrintWriter.write(100) && PrintWriter.print(100)**/
+	public void testPrintWriterConstructors() throws IOException{
+
+		// PrintWriter is more powerfull than (FileWriter & BufferedWriter) cause:
+		// - It has all method of FileWriter & BufferedWriter 
+		// - It possess print & println to provide more writing capacity than FileWriter & BufferedWriter
+		//	(FileWriter & BufferedWriter cannot write directly boolean, int, double values to file without converting to string first)
+		PrintWriter mPWriter = new PrintWriter(new FileWriter("print-writebla.txt")); // or new PrintWriter("print-writebla.txt")
+		mPWriter.println("Hello World PrintWriter");
+		mPWriter.print('c');
+		mPWriter.print(100);
+		mPWriter.print(100.01);
+		mPWriter.println(true);
+		mPWriter.print("End PW");
+		mPWriter.close();
+		
+		boolean conatins = Files.readAllLines(Paths.get("print-writebla.txt")).contains("End PW");
+		Assert.assertTrue(conatins);
 	}
 	
 	private static String createReadeableFile(String fileName) throws IOException{
