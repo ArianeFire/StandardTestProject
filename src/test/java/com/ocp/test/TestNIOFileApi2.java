@@ -6,6 +6,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.DosFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -121,6 +126,7 @@ public class TestNIOFileApi2 {
 	}
 	
 	@Test
+	@Ignore
 	public void testMoveFileOrDirectory() throws IOException{
 		Path mFileToBeMoved = Files.createFile(Paths.get("FileToBeMoved.txt"));
 		Path mDestionation = Paths.get("import").resolve(mFileToBeMoved.getFileName());
@@ -129,5 +135,40 @@ public class TestNIOFileApi2 {
 		Files.move(mFileToBeMoved, mDestionation, StandardCopyOption.REPLACE_EXISTING);
 		
 		Assert.assertTrue(Files.exists(mDestionation));
+	}
+	
+	@Test/*(expected = UnsupportedOperationException.class)*/
+	public void testReadFileOrDirectoryMetadata() throws IOException{
+		
+		Path mNomencLog = Paths.get("NomenclatureImport.log");
+		
+		long fileSize = Files.size(mNomencLog);	// Read File Size Metadata
+		Assert.assertTrue(fileSize > 0); 
+		
+		FileTime mFileTime = Files.getLastModifiedTime(mNomencLog); // Read the last modified time of that file
+		System.out.println(mFileTime);
+		Assert.assertTrue(mFileTime.compareTo(FileTime.from(Instant.now())) < 0);
+		
+		Assert.assertFalse(Files.isHidden(mNomencLog));
+		
+		String fileOwner = Files.getOwner(mNomencLog).getName();
+		System.out.println(fileOwner);
+		Assert.assertNotNull(fileOwner);
+		
+		// The above method read a single Attributes, 
+		// which can lead to performance issue when you want to read multiple Attributes
+		// This can be solve using Files.readAttributes(...) methods
+		Map<String, Object> attributes = Files.readAttributes(mNomencLog, "size,lastModifiedTime,lastAccessTime");
+		Assert.assertTrue(attributes.size() == 3);
+		Assert.assertTrue(((Long)attributes.getOrDefault("size", 0)).compareTo(0L) > 0);
+		
+		// Or more cooler form
+		BasicFileAttributes basicAttrs = Files.readAttributes(mNomencLog, BasicFileAttributes.class);
+		DosFileAttributes dosAttrs = Files.readAttributes(mNomencLog, DosFileAttributes.class);
+		
+		Assert.assertTrue(basicAttrs.size() == dosAttrs.size());
+		
+		// This may throw UnsupportedOperationException as not every OS support (Not Window)
+		//PosixFileAttributes posixAttrs = Files.readAttributes(mNomencLog, PosixFileAttributes.class);
 	}
 }
