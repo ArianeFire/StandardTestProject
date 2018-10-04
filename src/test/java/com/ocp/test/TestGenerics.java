@@ -62,4 +62,23 @@ public class TestGenerics {
 		nonGenericList.add(1.4);
 		nonGenericList.add(true);
 	}
+	
+	@Test
+	public void testGenericAvailabilityOnlyAtCompileTime(){
+		
+		// At Compile Time, there will be the following activities
+		// 1. Compile with Generics
+		// 2 Remove Generics
+		// 3. Compile without Generics
+		// This is why the below methods will not compile
+		
+	}
+	
+	/*private void method1(List<String> strs){
+		
+	}
+	
+	private void method1(List<Integer> strs){
+		
+	}*/
 }
