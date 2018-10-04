@@ -2,14 +2,22 @@ package com.ocp.test;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.DosFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -138,6 +146,7 @@ public class TestNIOFileApi2 {
 	}
 	
 	@Test/*(expected = UnsupportedOperationException.class)*/
+	@Ignore
 	public void testReadFileOrDirectoryMetadata() throws IOException{
 		
 		Path mNomencLog = Paths.get("NomenclatureImport.log");
@@ -170,5 +179,84 @@ public class TestNIOFileApi2 {
 		
 		// This may throw UnsupportedOperationException as not every OS support (Not Window)
 		//PosixFileAttributes posixAttrs = Files.readAttributes(mNomencLog, PosixFileAttributes.class);
+	}
+	
+	@Test
+	@Ignore
+	public void testWalkFileTree() throws IOException{
+		
+		Path mProjectRootDir = Paths.get(".");
+		
+		// Basic Walking
+		class JavaFilePrinter implements FileVisitor<Path> {
+			@Override
+			public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+				if(".git".equals(dir.getFileName().toString())) // Skip .git files
+					return FileVisitResult.SKIP_SUBTREE;
+				
+				//System.out.println(String.format("Will Start Visiting Dir %s", dir.getFileName()));
+				return FileVisitResult.CONTINUE;
+			}
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+				if(file.getFileName().toString().endsWith(".java"))
+					System.out.println(String.format("Visit File %s", file.getFileName()));
+				return FileVisitResult.CONTINUE;
+			}
+			@Override
+			public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+				System.out.println(String.format("Visiting the following File %s as failed, due to %s", file.getFileName(), exc.getMessage()));
+				return FileVisitResult.TERMINATE;
+			}
+			@Override
+			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+				//System.out.println(String.format("Finished visiting the Dir. %s", dir.getFileName()));
+				return FileVisitResult.CONTINUE;
+			}
+		}
+		
+		Files.walkFileTree(mProjectRootDir, new JavaFilePrinter());
+		
+		// More Advanced FileVisit Option
+		Files.walkFileTree(mProjectRootDir, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, new JavaFilePrinter());
+	}
+	
+	/**
+	 *	Step to use WatchService API: 
+	 *	1. Get A WatchService Instance From the File System 
+	 *	2. Register Your Path Object with the WatchService which already implements Watchable 
+	 *		(Note that only Watchable object can be used to register for an event to the WatchService)
+	 *	3. Process upcomming events
+	 */
+	@Test
+	@Ignore
+	public void testFileWatcherService() throws IOException{
+		
+		Path mRootProjectRootDir = Paths.get(".");
+		
+		WatchService watcher = FileSystems.getDefault().newWatchService();
+		mRootProjectRootDir.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
+		
+		for(;;){
+			WatchKey key;
+			try {
+				key = watcher.take();
+			} catch (InterruptedException e) {
+				return;
+			}
+			
+			for(WatchEvent<?> event: key.pollEvents()){
+				WatchEvent.Kind<?> kind = event.kind();
+				
+				
+				if(StandardWatchEventKinds.OVERFLOW.equals(kind))
+					return;
+				
+				if(StandardWatchEventKinds.ENTRY_MODIFY.equals(kind)){
+					// Process Event
+				}
+			}
+			
+		}
 	}
 }
